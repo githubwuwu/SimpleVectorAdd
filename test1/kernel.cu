@@ -11,7 +11,6 @@ void serial_add(double *a, double *b, double *c, int n, int m)
 {
 	for (int index = 0; index<n; index++)
 	{
-
 		c[index] = a[index] + b[index];
 	}
 }

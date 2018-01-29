@@ -9,7 +9,6 @@ __global__ void
 vectorAdd(const float *A, const float *B, float *C, int numElements,int M)
 {
 	int i = blockDim.x * blockIdx.x + threadIdx.x;
-
 	if (i < numElements)
 	{
 		for (int j = 0; j < M; j++)
@@ -23,7 +22,7 @@ vectorAdd(const float *A, const float *B, float *C, int numElements,int M)
 int main()
 {
 	int numElements = 1024*1024;  //数组大小
-	int M = 1;  //计算重复次数
+	int repeat_M = 1;  //计算重复次数
 	size_t size = numElements * sizeof(float);
 	printf("[Vector addition of %d elements]\n", numElements);
 
@@ -71,11 +70,12 @@ int main()
 	cudaEventRecord(start);
 
 	//调用核函数
-	vectorAdd << <blocksPerGrid, threadsPerBlock >> >(d_A, d_B, d_C, numElements,M);
+	vectorAdd << <blocksPerGrid, threadsPerBlock >> >(d_A, d_B, d_C, numElements, repeat_M);
 
 	//计时结束
 	cudaEventRecord(stop);
 	cudaEventSynchronize(stop);
+	//cudaDeviceSynchronize();
 	cudaEventElapsedTime(&milli, start, stop);
 	printf("gpu execution time (ms): %f \n", milli);
 
@@ -88,7 +88,7 @@ int main()
 	begin = clock();
 	for (int i = 0; i < numElements; ++i)
 	{
-		for (int j = 0; j < M; j++)
+		for (int j = 0; j < repeat_M; j++)
 		{
 			hh_C[i] = h_A[i] * h_B[i];
 		}
@@ -96,7 +96,7 @@ int main()
 	end = clock();
 	printf("cpu execution time (ms): %f \n", ((float)(end - begin)) / CLOCKS_PER_SEC*1000);
 
-	//用cpu计算数据结果，并与GPU计算结果进行比较
+	//与GPU计算结果进行比较 判断正确率
 	for (int i = 0; i < numElements; ++i)
 	{
 		if (fabs(hh_C[i] - h_C[i]) > 1e-5)
